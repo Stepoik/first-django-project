@@ -1,0 +1,40 @@
+.player{
+	height: 20px;
+	width: 200px;
+	max-width: 500px;
+}
+.teamBoard{
+	height: 400px;
+	display: flex;
+	justify-content: center;
+}
+.team{
+	height: 200px;
+	width: 200px;
+	border-color: rgba(148,146,146, 0.5);
+	border-width: 2px;
+	border-style: solid;
+	border-radius: 5px;
+	cursor: pointer;
+}
+.button{
+	cursor: pointer;
+	background: limegreen;
+	max-width: 200px;
+	margin: 0 auto;
+}
+.spect{
+	margin: 0 auto;
+}
+.word{
+	margin: 0 auto;
+	max-width: 200px;
+}
+.timer{
+	margin: 0 auto;
+	max-width: 200px;
+}
+.words{
+	margin: 0 auto;
+	max-width: 200px;
+}
