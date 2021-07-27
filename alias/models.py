@@ -13,7 +13,7 @@ class Teams(models.Model):
     lobby = models.CharField(max_length=7)
     score = models.IntegerField()
     player_quest = models.IntegerField()
-class Games(models.Model):
+class Lobbys(models.Model):
     lobby = models.CharField(max_length=7)
     start = models.CharField(max_length=5)
     queue = models.IntegerField()

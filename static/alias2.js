@@ -230,6 +230,7 @@ function drawlobby(){
 	}else{
 		$('.send').remove()
 		$('.words').remove()
+		wordsPress = 'false'
 	}
 }
 timer = setInterval(function(){

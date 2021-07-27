@@ -3,19 +3,15 @@ from django.urls import path, include
 import alias.views as views
 
 urlpatterns = [
-    path('alias/<str:lobby>',views.Monopoly, name= 'alias'),
-    # path('addcontact/', views.addContact,name = 'add'),
-    # path('sessionControl/', views.controlSession),
-    # path('delContact/<str:lobby>', views.delUser),
-    # path('gameStart', views.gameProcess),
-    # path('gameGo/', views.gameGo)
-    path('alias/getInfo/<str:lobby>', views.getInfo),
-    path('alias/changeTeam/<str:lobby>', views.changeTeam),
-    path('alias/startGame/<str:lobby>', views.startGame),
-    path('alias/createTeam/<str:lobby>', views.createTeam),
-    path('alias/delplayer/<str:lobby>',views.delPlayer),
-    path('alias/ready/<str:lobby>', views.getReady),
-    path('alias/next/<str:lobby>', views.nextWord),
-    path('alias/changeStatus/<str:lobby>', views.changeStatus),
-    path('alias/send/<str:lobby>', views.send)
+    path('', views.redirection),
+    path('<str:lobby>/',views.main, name= 'main'),
+    path('<str:lobby>/getInfo/', views.getInfo),
+    path('<str:lobby>/changeTeam/', views.changeTeam),
+    path('<str:lobby>/startGame/', views.startGame),
+    path('<str:lobby>/createTeam/', views.createTeam),
+    path('<str:lobby>/delplayer/',views.delPlayer),
+    path('<str:lobby>/ready/', views.getReady),
+    path('<str:lobby>/next/', views.nextWord),
+    path('<str:lobby>/changeStatus/', views.changeStatus),
+    path('<str:lobby>/send/', views.send)
 ]
