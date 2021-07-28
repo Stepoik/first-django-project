@@ -7,12 +7,21 @@ from datetime import datetime, timedelta, timezone
 import random
 import string
 
+def error(request):
+     return HttpResponse('Error')
+
 def redirection(request):
      lobby = getSessionTeam(formatpass=6)
      return redirect(lobby+'/')
 
 def main(request, lobby):
-    return render(request, 'games/monopoly.html')
+     try:
+          if lobby != request.session.get('lobby') and request.session.get('lobby')!=None:
+               print(request.session.get('lobby'))
+               return redirect('/alias/error/')
+     except:
+          pass
+     return render(request, 'games/monopoly.html')
 
 def send(request,lobby):
      if request.is_ajax():
@@ -170,7 +179,9 @@ def createPlayer(request, lobby): #create player
      root = 'false'
      if len(Alias.objects.filter(lobby = lobby)) == 0:
           root = 'true'
+     request.session.save()
      request.session['root'] = root
+     request.session['lobby'] = lobby
      request.session['self'] = getSessionTeam(formatpass=6)
      request.session['team'] = 'spect'
      player = Alias(name = request.GET.get('name', 'name'),root = root, lobby = lobby, team = request.session.get('team'),session = request.session.get('self'), ready = 'false')
