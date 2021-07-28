@@ -6,28 +6,32 @@ from django.contrib.sessions.models import Session
 from datetime import datetime, timedelta, timezone
 import random
 import string
+import time
+# while True:
+#      time.sleep(300)
+#      checkusers()
+#
+# def checkuser():
+#      for user in Alias.objects.all():
+#           if (datetime.now() - user.lasttime).total_seconds() > 300:
+#                user.delete()
 
-def error(request):
-     return HttpResponse('Error')
 
 def redirection(request):
      lobby = getSessionTeam(formatpass=6)
      return redirect(lobby+'/')
 
+
 def main(request, lobby):
-     try:
-          if lobby != request.session.get('lobby') and request.session.get('lobby')!=None:
-               print(request.session.get('lobby'))
-               return redirect('/alias/error/')
-     except:
-          pass
-     return render(request, 'games/monopoly.html')
+    return render(request, 'games/alias.html')
+
 
 def send(request,lobby):
      if request.is_ajax():
           game = Lobbys.objects.get(lobby = lobby)
           roundNext(lobby, game)
           return HttpResponse('scoring')
+
 
 def changeStatus(request, lobby):
      if request.is_ajax():
@@ -38,8 +42,11 @@ def changeStatus(request, lobby):
                word.status = 'false'
           word.save()
           return HttpResponse('changeWord')
+
+
 def delWords(lobby):
      Words.objects.filter(lobby = lobby).delete()
+
 
 def roundNext(lobby,game):
      game.round = 'false'
@@ -56,37 +63,46 @@ def roundNext(lobby,game):
      team.save()
      game.save()
      delWords(lobby)
+
+
 def nextWord(request, lobby):
      if request.is_ajax():
           cursor = connection.cursor()
           cursor.execute('''
           select * from words''')
           newWord =random.choice(cursor.fetchall())[0]
-          print(newWord)
           Words(lobby = lobby, word = newWord, status = 'false').save()
           return HttpResponse('addWord')
+
+
 def getReady(request, lobby):
-     player = Alias.objects.get(lobby = lobby, session = request.session.get('self'))
+     player = Alias.objects.get(lobby = lobby, djangosession = request.session.session_key)
      if player.ready == 'true':
           player.ready = 'false'
      else:
           player.ready ='true'
      player.save()
      return HttpResponse('ready')
+
+
 def delTeam(lobby):
      for team in list(map(lambda x:x.team, Teams.objects.filter(lobby = lobby))):
           if len(Alias.objects.filter(lobby = lobby, team = team)) == 0:
                Teams.objects.get(lobby = lobby, team = team).delete()
+
+
 def createTeam(request, lobby): #create new team
      if request.is_ajax():
-          if len(Alias.objects.filter(lobby = lobby, team = request.session.get('team'))) > 1 or request.session.get('team') == 'spect':
+          team = Alias.objects.get(lobby = lobby, djangosession = request.session.session_key).team
+          if len(Alias.objects.filter(lobby = lobby, team = team)) > 1 or team == 'spect':
                team = getSessionTeam(formatpass=7)
                Teams(team = team, lobby = lobby,score = 0,player_quest = 0).save()
-               player = Alias.objects.get(lobby = lobby, session = request.session.get('self'))
+               player = Alias.objects.get(lobby = lobby, djangosession = request.session.session_key)
                player.team = team
-               request.session['team'] = team
                player.save()
           return HttpResponse('create')
+
+
 def getWords(request, lobby,game): #Get all words and questor/answer
      teamIndex =Lobbys.objects.get(lobby=lobby).queue
      questIndex = Teams.objects.filter(lobby = lobby)[teamIndex]
@@ -102,9 +118,10 @@ def getWords(request, lobby,game): #Get all words and questor/answer
      words = list(map(lambda x: [x.word, x.status], Words.objects.filter(lobby=lobby))) #get words
      playerQuestor = 'false'
      playerAnsw = 'false'
-     if request.session.get('self') == answerSes:
+     session = Alias.objects.get(lobby = lobby, djangosession = request.session.session_key).session
+     if session == answerSes:
           playerAnsw = 'true'
-     if request.session.get('self') != questorSes:
+     if session != questorSes:
           words = words[:len(words)-1]
      else:
           playerQuestor = 'true'
@@ -118,47 +135,53 @@ def getWords(request, lobby,game): #Get all words and questor/answer
      questor.save()
      answer.save()
      return words,[questorSes, questorReady, playerQuestor],[answerSes, answerReady, playerAnsw]
+
+
 def delPlayer(request, lobby): #delete player
-     Alias.objects.get(lobby = lobby, session = request.session.get('self')).delete()
+     Alias.objects.get(lobby = lobby, djangosession = request.session.session_key).delete()
      delTeam(lobby)
      if len(Teams.objects.filter(lobby = lobby)) == 0:
           Lobbys.objects.get(lobby = lobby).delete()
           delWords(lobby)
      return HttpResponse('delete')
+
+
 def startGame(request,lobby): # start game
      game = Lobbys.objects.get(lobby = lobby)
      game.start = 'true'
      game.save()
      return HttpResponse('start')
+
+
 def changeTeam(request, lobby): #change users team
      if request.is_ajax() and Lobbys.objects.get(lobby = lobby).start == 'false':
           newTeam = request.GET.get('team')
-          request.session['team'] = newTeam
-          player = Alias.objects.get(lobby = lobby, session = request.session.get('self'))
+          player = Alias.objects.get(lobby = lobby, djangosession = request.session.session_key)
           player.team = newTeam
           player.save()
           return HttpResponse('change')
+
+
 def getInfo(request, lobby): #main function
      if request.is_ajax() and request.GET.get('close') == 'false':
-          print(request.path)
           try:
                game = Lobbys.objects.get(lobby = lobby)
           except:
                createGame(lobby)
                game = Lobbys.objects.get(lobby = lobby)
           try:
-               player = Alias.objects.get(lobby = lobby, session = request.session.get('self'))
+               player = Alias.objects.get(lobby = lobby, djangosession = request.session.session_key)
           except:
                player = createPlayer(request, lobby)
           delTeam(lobby)
           name = request.GET.get('name')
-          print(name)
           if name == '':
                name = 'name'
           player.name = name
+          player.lasttime = datetime.now(timezone.utc)
           player.save()
-          session = request.session.get('self')
-          root = request.session.get('root')
+          session = player.session
+          root = player.root
           players = list(map(lambda x: [x.name, x.team,x.session],Alias.objects.filter(lobby = lobby)))
           teams = list(map(lambda x: x.team, Teams.objects.filter(lobby = lobby)))
           data = {'start': game.start, 'session':session,'players':players, 'teams':teams, 'ready':game.round, 'root':root}
@@ -173,20 +196,23 @@ def getInfo(request, lobby): #main function
                data['questor'] =words[1]
                data['answer'] = words[2]
           return JsonResponse(data)
+
+
 def createGame(lobby): #create game
      Lobbys(lobby = lobby, start = 'false', queue =0, round = 'false').save()
+
+
 def createPlayer(request, lobby): #create player
      root = 'false'
      if len(Alias.objects.filter(lobby = lobby)) == 0:
           root = 'true'
-     request.session.save()
-     request.session['root'] = root
-     request.session['lobby'] = lobby
-     request.session['self'] = getSessionTeam(formatpass=6)
-     request.session['team'] = 'spect'
-     player = Alias(name = request.GET.get('name', 'name'),root = root, lobby = lobby, team = request.session.get('team'),session = request.session.get('self'), ready = 'false')
+     if request.session.session_key == None:
+          request.session.save()
+     player = Alias(lasttime = datetime.now(timezone.utc),djangosession = request.session.session_key,name = request.GET.get('name', 'name'),root = root, lobby = lobby, team = 'spect',session = getSessionTeam(), ready = 'false')
      player.save()
      return player
+
+
 def getSessionTeam(formatpass = 6): #get code
      cod = ''
      cod+=random.choice(list(string.ascii_lowercase))

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     'alias',
     'main',
+    'bunker',
 ]
 
 MIDDLEWARE = [

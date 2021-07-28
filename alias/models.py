@@ -8,6 +8,8 @@ class Alias(models.Model):
     team = models.CharField(max_length=7)
     session = models.CharField(Session,db_column='session_key', max_length=100)
     ready = models.CharField(max_length=5)
+    lasttime = models.DateTimeField(auto_now_add = True)
+    djangosession = models.CharField(max_length=100)
 class Teams(models.Model):
     team = models.CharField(max_length=7)
     lobby = models.CharField(max_length=7)

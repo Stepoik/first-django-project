@@ -4,7 +4,6 @@ import alias.views as views
 
 urlpatterns = [
     path('', views.redirection),
-    path('error/', views.error),
     path('<str:lobby>/',views.main, name= 'main'),
     path('<str:lobby>/getInfo/', views.getInfo),
     path('<str:lobby>/changeTeam/', views.changeTeam),
