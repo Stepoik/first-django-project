@@ -1,3 +1,41 @@
 body{
-	background: url(/images/bunker.jpg);
+	background: url(../images/bunker.jpg);
+	background-size: cover;
+}
+.spectors{
+	margin: 20px;
+	width: 100px;
+	height: 100px;
+	background-color:white;
+	text-align: center;
+}
+.joinbtn{
+	margin: 20px;
+	width: 100px;
+	height: 100px;
+	background-color:white;
+}
+.players{
+	margin-top:20px ;
+}
+.player{
+	margin: 20px;
+	max-width: 100px;
+	max-height: 100px;
+	background-color:white;
+
+}
+.start{
+	max-width: 100px;
+	background-color: green;
+	max-height: 20px;
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+}
+.specific{
+	background-color: orange;
+}
+.self{
+	cursor: pointer;
 }

@@ -1,3 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
+def getPlayers(request,lobby):
+    return render(request, 'games/bunker.html')

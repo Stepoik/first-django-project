@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-&ts6(dvidb*wjugngg=^$v2ea-o_&#sg4@a*rl9btee487!8*w'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
 
     'alias',
     'main',
@@ -73,8 +74,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'pls.wsgi.application'
-
-
+ASGI_APPLICATION = 'pls.asgi.application'
+CHANNEL_LAYERS = {
+    'default':{
+        'BACKEND':'channels_redis.core.RedisChannelLayer',
+        'CONFIG':{
+            'hosts':[('localhost',6379)]
+        }
+    }
+}
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
