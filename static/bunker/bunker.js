@@ -8,101 +8,154 @@
 	            +'/')
 	const checkready = setInterval(function(){
 	if (userSocket.readyState === 1){
-		userName = prompt('Your name')
-		console.log('send')
-		userSocket.send(JSON.stringify({
-		'function':'GetPlayers',
-		'name':userName
-		}))
+		$.ajax({
+			url:'getplayers',
+			success:function(data){
+				getPlayers(data)
+			}
+		})
 		clearInterval(checkready)
 	}})
 	userSocket.onmessage = function(e){
 		let data = JSON.parse(e.data)
-		if (data.function === 'GetPlayers') {
-			getPlayers(data)
-		}else if (data.function === 'changeTeam'){
-			changeTeam(data)
-		}else if(data.function === 'addPlayer'){
+		if (data.function === 'add_player'){
 			addPlayer(data)
-		}else if (data.function === 'delPlayer'){
+		}else if (data.function === 'change'){
+			document.querySelector('.'+data.id).remove()
+			addPlayer(data)
+		}else if (data.function === 'delete'){
 			$('.'+data.id).remove()
-		}else if (data.function === 'getspecif'){
-			drawSpec(data)
+		}else if (data.function === 'get_spec'){
+			$('.joinbtn').remove()
+			draw_self_spec(data)
+			draw_bunker(data)
 		}else if (data.function === 'open'){
 			open(data)
+		}else if (data.function === 'kick'){
+			console.log(data.player)
+			$('.'+data.player).remove()
 		}
 	}
+	document.querySelector('.spectors').addEventListener('click', function(){
+		userSocket.send(JSON.stringify({
+			'change':false
+		}))
+	})
 	function getPlayers(data){
-		data.players.forEach(player =>{
+		root = data.root
+		data.players.forEach(player=>{
 			addPlayer(player)
 		})
-		if (data.root === 'true'){
-			startbtn = document.createElement('div')
-			startbtn.className = 'start'
+		data.all_specs.forEach(spec =>{
+			open(spec)
+		})
+		draw_self_spec(data)
+		if (data.inlobby === false){
+			let userName = prompt('Ваш ник?')
+			userSocket.send(JSON.stringify({
+				'new_player':userName,
+				'root':data.root,
+				'session':data.session
+			}))
+		}else{
+			userSocket.send(JSON.stringify({
+				'new_player':'None',
+				'online':true,
+				'session':data.session
+			}))
+		}
+		if (data.start === false){
+			let join = document.createElement('div')
+			join.className = 'joinbtn'
+			join.textContent = 'Войти'
+			join.addEventListener('click', function(){
+								userSocket.send(JSON.stringify({
+									'change':true
+								}))})
+			document.querySelector('.buttons').appendChild(join)
+		}else{
+			draw_bunker(data)
+		}
+		if (data.root && data.start === false){
+			let startbtn = document.createElement('div')
+			startbtn.className = 'button start'
 			startbtn.textContent = 'start'
 			startbtn.addEventListener('click', function(){
 				userSocket.send(JSON.stringify({
 					'function':'start'
-				}))
-			})
+				}))})
 			document.querySelector('.buttons').appendChild(startbtn)
 		}
 	}
 	function addPlayer(player){
-		let playerDiv = document.createElement('div')
-		playerDiv.className = 'player '+player.id
-		playerDiv.textContent = player.name
-		if (player.play === 'true'){
-			document.querySelector('.players').appendChild(playerDiv)
+		let plDiv = document.createElement('div')
+		plDiv.className = player.id
+		plDiv.textContent = player.name
+		if (player.play === true){
+			plDiv.className +=' player'
+			document.querySelector('.players').appendChild(plDiv)
 		}else{
-			playerDiv.className = player.id
-			document.querySelector('.spectors').appendChild(playerDiv)
+			document.querySelector('.spectors').appendChild(plDiv)
 		}
-	}
-	function changeTeam(player){
-		console.log('change')
-		let playerDiv = document.createElement('div')
-		playerDiv.className = 'player '+player.id
-		playerDiv.textContent = document.querySelector('.'+player.id).textContent
-		$('.'+player.id).remove()
-		if (player.play === 'true'){
-			document.querySelector('.players').appendChild(playerDiv)
-		}else{
-			document.querySelector('.spectors').appendChild(playerDiv)
+		if (player.specs){
+			console.log(player.specs)
+			for (spec in player.specs){
+				open(player.specs[spec])
+			}
 		}
-	}
-	function drawSpec(spec){
-		for (special in spec){
-			if (special != 'function'){
-				let selfspec = document.createElement('div')
-				selfspec.className = 'self '+ special
-				selfspec.textContent = spec[special]
-				selfspec.addEventListener('click', function(){
+		if (root){
+			console.log('root')
+			document.querySelector('.'+player.id+'.player').onmouseenter = function(){
+				console.log(player.id)
+				let kickbtn = document.createElement('div')
+				kickbtn.className = player.id+' kick button'
+				kickbtn.textContent = '×'
+				kickbtn.addEventListener('click',function(){
 					userSocket.send(JSON.stringify({
-						'function':'open',
-						'spec':selfspec.className.split(' ')[1]
+						'kick':player.id
 					}))
 				})
-				document.querySelector('.specific').appendChild(selfspec)
+				document.querySelector('.'+player.id).appendChild(kickbtn)
+			}
+			document.querySelector('.'+player.id+'.player').onmouseleave = function(){
+				console.log('loalsdas')
+				$('.'+player.id+'.kick.button').remove()
 			}
 		}
 	}
-	function open(data){
-		let spec = document.createElement('div')
-		spec.className = 'spec'
-		spec.textContent = data.spec
-		document.querySelector('.'+data.id).appendChild(spec)
+	function draw_self_spec(data){
+		$('.start').remove()
+		for (spec in data.self_specs){
+			console.log(spec)
+			let new_spec = document.createElement('div')
+			new_spec.className = 'self '+spec
+			new_spec.textContent = data.self_specs[spec]
+			new_spec.addEventListener('click', function(){
+				userSocket.send(JSON.stringify({
+					'open':new_spec.className.split(' ')[1]
+				}))
+			})
+			document.querySelector('.specific').appendChild(new_spec)
+		}
 	}
-	const join = document.querySelector('.joinbtn')
-	join.addEventListener('click', function(){
-		userSocket.send(JSON.stringify({
-			'function':'changeTeam',
-			'play':'true'
-		}))
-	})
-	document.querySelector('.spectors').addEventListener('click', function(){
-		userSocket.send(JSON.stringify({
-			'function':'changeTeam',
-			'play':'false'
-		}))})
-})();
+	function open(spec){
+		console.log(spec)
+		let new_spec = document.createElement('div')
+		new_spec.className = 'spec'
+		new_spec.textContent = spec.spec
+		document.querySelector('.'+spec.player).appendChild(new_spec)
+	}
+	function draw_bunker(data){
+		console.log(data.bunker)
+		let bunker = document.createElement('div')
+		bunker.className = 'bunker'
+		bunker.textContent = 'Бункер: '
+		for (cond in data.bunker){
+			let divcond = document.createElement('div')
+			divcond.className = 'bunkercond '+cond
+			divcond.textContent = data.bunker[cond]
+			bunker.appendChild(divcond)
+		}
+		document.querySelector('.content').insertBefore( bunker,document.querySelector('.content').firstChild)
+	}
+})()
